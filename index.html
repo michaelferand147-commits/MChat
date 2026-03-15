@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CS Chat</title>
+<style>
+body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #e5ddd5; display: flex; flex-direction: column; height: 100vh; margin: 0; }
+header { background: #075E54; color: #fff; padding: 15px; text-align: center; font-size: 1.2em; font-weight: bold; }
+.top-input { display: flex; flex-direction: column; padding: 10px; background: #f0f2f5; }
+.top-input input { margin: 5px 0; padding: 10px; border-radius: 10px; border: 1px solid #ccc; }
+#messages { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; }
+.message { max-width: 70%; padding: 8px 12px; margin: 5px 0; border-radius: 20px; word-wrap: break-word; }
+.me { align-self: flex-end; background: #dcf8c6; }
+.other { align-self: flex-start; background: #fff; }
+.input-area { display: flex; padding: 10px; background: #f0f2f5; border-top: 1px solid #ccc; }
+.input-area input { flex: 1; padding: 10px 15px; border-radius: 20px; border: 1px solid #ccc; margin-right: 10px; }
+.input-area button { padding: 10px 20px; border-radius: 20px; background: #25D366; color: white; border: none; cursor: pointer; font-weight: bold; }
+.input-area button:hover { background: #1ebe5d; }
+</style>
+</head>
+<body>
+
+<header>CS Chat</header>
+
+<div class="top-input">
+  <input type="text" id="username" placeholder="Nama CS">
+  <input type="text" id="ticket" placeholder="Tiket 4 digit">
+</div>
+
+<div id="messages"></div>
+
+<div class="input-area">
+  <input type="text" id="message" placeholder="Tulis pesan...">
+  <button onclick="sendMessage()">Kirim</button>
+</div>
+
+<!-- Firebase v9 modular SDK -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+import { getDatabase, ref, push, onChildAdded } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
+
+// Firebase config kamu
+const firebaseConfig = {
+  apiKey: "AIzaSyCf46sEsbuZQ4ASwrbhteRqiEVOyQdJALU",
+  authDomain: "mchat-project-9e66a.firebaseapp.com",
+  databaseURL: "https://mchat-project-9e66a-default-rtdb.firebaseio.com",
+  projectId: "mchat-project-9e66a",
+  storageBucket: "mchat-project-9e66a.firebasestorage.app",
+  messagingSenderId: "783368240435",
+  appId: "1:783368240435:web:e3f735b73c946b7fcd9246"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+let ticketId = "";
+const messagesDiv = document.getElementById('messages');
+
+function sendMessage() {
+  ticketId = document.getElementById('ticket').value.trim();
+  const username = document.getElementById('username').value || 'CS';
+  const msg = document.getElementById('message').value.trim();
+  if(!ticketId || !msg) return;
+
+  push(ref(db, `tickets/${ticketId}/messages`), {
+    sender: "cs",
+    name: username,
+    message: msg,
+    timestamp: Date.now()
+  });
+  document.getElementById('message').value = '';
+}
+
+function listenMessages() {
+  ticketId = document.getElementById('ticket').value.trim();
+  if(!ticketId) return;
+  messagesDiv.innerHTML = "";
+
+  onChildAdded(ref(db, `tickets/${ticketId}/messages`), (snapshot) => {
+    const msg = snapshot.val();
+    const div = document.createElement('div');
+    div.classList.add('message');
+    if(msg.sender === "cs") div.classList.add('me');
+    else div.classList.add('other');
+    div.innerHTML = `<b>${msg.name}:</b> ${msg.message}`;
+    messagesDiv.appendChild(div);
+    messagesDiv.scrollTop = messagesDiv.scrollHeight;
+  });
+}
+
+document.getElementById('ticket').addEventListener('change', listenMessages);
+</script>
+</body>
+</html>
