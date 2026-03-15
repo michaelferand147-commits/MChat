@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Web Chat Privat Modern</title>
+<style>
+  /* Reset & layout */
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #e5ddd5; display: flex; flex-direction: column; height: 100vh; }
+
+  /* Header */
+  header { background: #075E54; color: #fff; padding: 15px; text-align: center; font-size: 1.2em; font-weight: bold; }
+
+  /* Chat area */
+  #messages { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; }
+  .message { max-width: 70%; padding: 8px 12px; margin: 5px 0; border-radius: 20px; word-wrap: break-word; }
+  .me { align-self: flex-end; background: #dcf8c6; }
+  .other { align-self: flex-start; background: #fff; }
+
+  /* Input area */
+  .input-area { display: flex; padding: 10px; background: #f0f2f5; border-top: 1px solid #ccc; }
+  .input-area input[type=text] { flex: 1; padding: 10px 15px; border-radius: 20px; border: 1px solid #ccc; margin-right: 10px; }
+  .input-area button { padding: 10px 20px; border-radius: 20px; background: #25D366; color: white; border: none; cursor: pointer; font-weight: bold; }
+  .input-area button:hover { background: #1ebe5d; }
+
+  /* Code & username */
+  .top-input { display: flex; flex-direction: column; padding: 10px; background: #f0f2f5; }
+  .top-input input { margin: 5px 0; padding: 10px; border-radius: 10px; border: 1px solid #ccc; }
+</style>
+</head>
+<body>
+
+<header>Web Chat Privat Modern</header>
+
+<div class="top-input">
+  <input type="text" id="myCode" placeholder="Masukkan kode unik">
+  <input type="text" id="username" placeholder="Nama kamu">
+</div>
+
+<div id="messages"></div>
+
+<div class="input-area">
+  <input type="text" id="message" placeholder="Tulis pesan...">
+  <button onclick="sendMessage()">Kirim</button>
+</div>
+
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+<script>
+  // Ganti firebaseConfig dengan milik kamu
+  const firebaseConfig = {
+    apiKey: "AIzaSyCf46sEsbuZQ4ASwrbhteRqiEVOyQdJALU",
+    authDomain: "mchat-project-9e66a.firebaseapp.com",
+    databaseURL: "https://mchat-project-9e66a-default-rtdb.firebaseio.com",
+    projectId: "mchat-project-9e66a",
+    storageBucket: "mchat-project-9e66a.firebasestorage.app",
+    messagingSenderId: "783368240435",
+    appId: "1:783368240435:web:e3f735b73c946b7fcd9246"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
+
+  let kode = "";
+  const messagesDiv = document.getElementById('messages');
+
+  function sendMessage() {
+    kode = document.getElementById('myCode').value.trim();
+    const username = document.getElementById('username').value || 'Anonim';
+    const message = document.getElementById('message').value.trim();
+    if(!kode || !message) return;
+
+    db.ref(`chat/${kode}`).push({username, message});
+    document.getElementById('message').value = '';
+  }
+
+  function listenMessages() {
+    kode = document.getElementById('myCode').value.trim();
+    if(!kode) return;
+
+    messagesDiv.innerHTML = ""; // clear tampilan saat input kode
+
+    // Hapus history lama dari DB (opsional)
+    db.ref(`chat/${kode}`).remove();
+
+    db.ref(`chat/${kode}`).on('child_added', snapshot => {
+      const msg = snapshot.val();
+      const div = document.createElement('div');
+      div.classList.add('message');
+      if(msg.username === (document.getElementById('username').value || 'Anonim')) div.classList.add('me');
+      else div.classList.add('other');
+      div.innerHTML = `<b>${msg.username}:</b> ${msg.message}`;
+      messagesDiv.appendChild(div);
+      messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    });
+  }
+
+  document.getElementById('myCode').addEventListener('change', listenMessages);
+</script>
+</body>
+</html>
