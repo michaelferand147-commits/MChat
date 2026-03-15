@@ -3,6 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <title>CS Chat</title>
+<style>
+body { font-family: sans-serif; padding: 20px; }
+#messages { border: 1px solid #ccc; padding: 10px; height: 300px; overflow-y: auto; margin-bottom: 10px; }
+input, button { padding: 8px; margin: 2px; }
+</style>
 </head>
 <body>
 
@@ -18,30 +23,31 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
 import { getDatabase, ref, set, push, onChildAdded } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
 
+// ======= Firebase Config =======
 const firebaseConfig = {
-  apiKey: "API_KEY_KAMU",
-  authDomain: "PROJECT_ID.firebaseapp.com",
-  databaseURL: "https://PROJECT_ID-default-rtdb.firebaseio.com",
-  projectId: "PROJECT_ID",
-  storageBucket: "PROJECT_ID.appspot.com",
-  messagingSenderId: "SENDER_ID",
-  appId: "APP_ID"
+  apiKey: "AIzaSyCf46sEsbuZQ4ASwrbhteRqiEVOyQdJALU",
+  authDomain: "mchat-project-9e66a.firebaseapp.com",
+  databaseURL: "https://mchat-project-9e66a-default-rtdb.firebaseio.com",
+  projectId: "mchat-project-9e66a",
+  storageBucket: "mchat-project-9e66a.firebasestorage.app",
+  messagingSenderId: "783368240435",
+  appId: "1:783368240435:web:e3f735b73c946b7fcd9246"
 };
 
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
 let ticketId = "";
+const messagesDiv = document.getElementById('messages');
 
 function generateTicket() { return Math.floor(1000 + Math.random()*9000).toString(); }
 
 function startChat() {
   const username = document.getElementById('username').value.trim();
-  if(!username) { alert("Masukkan nama CS!"); return; }
-
+  if(!username){ alert("Masukkan nama CS!"); return; }
   ticketId = generateTicket();
 
-  // buat object tiket lengkap
+  // Buat object tiket
   set(ref(db, `tickets/${ticketId}`), { csName: username, messages: {} });
 
   document.getElementById('message').style.display = 'inline';
@@ -64,11 +70,12 @@ function sendMessage() {
 }
 
 function listenMessages() {
-  onChildAdded(ref(db, `tickets/${ticketId}/messages`), (snapshot) => {
+  onChildAdded(ref(db, `tickets/${ticketId}/messages`), snapshot => {
     const msg = snapshot.val();
     const div = document.createElement('div');
     div.textContent = `${msg.name}: ${msg.message}`;
-    document.getElementById('messages').appendChild(div);
+    messagesDiv.appendChild(div);
+    messagesDiv.scrollTop = messagesDiv.scrollHeight;
   });
 }
 </script>
