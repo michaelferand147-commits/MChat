@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<title>CS Chat</title>
+</head>
+<body>
+
+<h2>CS Chat</h2>
+<input type="text" id="username" placeholder="Nama CS">
+<button onclick="startChat()">Mulai Chat</button>
+<br><br>
+<div id="messages"></div>
+<input type="text" id="message" placeholder="Tulis pesan..." style="display:none;">
+<button onclick="sendMessage()" style="display:none;">Kirim</button>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+import { getDatabase, ref, set, push, onChildAdded } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey: "API_KEY_KAMU",
+  authDomain: "PROJECT_ID.firebaseapp.com",
+  databaseURL: "https://PROJECT_ID-default-rtdb.firebaseio.com",
+  projectId: "PROJECT_ID",
+  storageBucket: "PROJECT_ID.appspot.com",
+  messagingSenderId: "SENDER_ID",
+  appId: "APP_ID"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+let ticketId = "";
+
+function generateTicket() { return Math.floor(1000 + Math.random()*9000).toString(); }
+
+function startChat() {
+  const username = document.getElementById('username').value.trim();
+  if(!username) { alert("Masukkan nama CS!"); return; }
+
+  ticketId = generateTicket();
+
+  // buat object tiket lengkap
+  set(ref(db, `tickets/${ticketId}`), { csName: username, messages: {} });
+
+  document.getElementById('message').style.display = 'inline';
+  document.querySelector('button[onclick="sendMessage()"]').style.display = 'inline';
+  listenMessages();
+}
+
+function sendMessage() {
+  const msg = document.getElementById('message').value.trim();
+  if(!msg) return;
+
+  push(ref(db, `tickets/${ticketId}/messages`), {
+    sender: "cs",
+    name: document.getElementById('username').value.trim(),
+    message: msg,
+    timestamp: Date.now()
+  });
+
+  document.getElementById('message').value = '';
+}
+
+function listenMessages() {
+  onChildAdded(ref(db, `tickets/${ticketId}/messages`), (snapshot) => {
+    const msg = snapshot.val();
+    const div = document.createElement('div');
+    div.textContent = `${msg.name}: ${msg.message}`;
+    document.getElementById('messages').appendChild(div);
+  });
+}
+</script>
+</body>
+</html>
