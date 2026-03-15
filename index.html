@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chat Privat Web</title>
+<style>
+  body { font-family: Arial; display: flex; flex-direction: column; align-items: center; padding: 20px; }
+  #messages { border: 1px solid #ccc; width: 100%; max-width: 400px; height: 300px; overflow-y: scroll; padding: 10px; margin-bottom: 10px; }
+  input, button { padding: 10px; margin: 5px 0; width: 100%; max-width: 400px; }
+</style>
+</head>
+<body>
+<h2>Chat Privat Web</h2>
+
+<input type="text" id="myCode" placeholder="Masukkan kode kamu">
+<input type="text" id="partnerCode" placeholder="Masukkan kode partner">
+<input type="text" id="username" placeholder="Nama kamu">
+<div id="messages"></div>
+<input type="text" id="message" placeholder="Tulis pesan...">
+<button onclick="sendMessage()">Kirim Pesan</button>
+
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+<script>
+  // Konfigurasi Firebase
+  const firebaseConfig = {
+    apiKey: "AIzaSyCf46sEsbuZQ4ASwrbhteRqiEVOyQdJALU",
+    authDomain: "mchat-project-9e66a.firebaseapp.com",
+    databaseURL: "https://mchat-project-9e66a-default-rtdb.firebaseio.com/",
+    projectId: "mchat-project-9e66a",
+    storageBucket: "mchat-project-9e66a.firebasestorage.app",
+    messagingSenderId: "783368240435",
+    appId: "1:783368240435:web:e3f735b73c946b7fcd9246"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
+
+  function sendMessage() {
+    const myCode = document.getElementById('myCode').value.trim();
+    const partnerCode = document.getElementById('partnerCode').value.trim();
+    const username = document.getElementById('username').value || 'Anonim';
+    const message = document.getElementById('message').value;
+    if(!myCode || !partnerCode || !message.trim()) return;
+
+    // Simpan pesan ke path khusus: dari kode-ku ke kode-partner
+    db.ref(`chat/${myCode}_${partnerCode}`).push({username, message});
+    document.getElementById('message').value = '';
+  }
+
+  function listenMessages() {
+    const myCode = document.getElementById('myCode').value.trim();
+    const partnerCode = document.getElementById('partnerCode').value.trim();
+    if(!myCode || !partnerCode) return;
+
+    const path1 = `chat/${myCode}_${partnerCode}`;
+    const path2 = `chat/${partnerCode}_${myCode}`;
+    
+    const messagesDiv = document.getElementById('messages');
+    messagesDiv.innerHTML = '';
+
+    db.ref(path1).on('child_added', snapshot => {
+      const msg = snapshot.val();
+      messagesDiv.innerHTML += `<b>${msg.username}:</b> ${msg.message}<br>`;
+      messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    });
+
+    db.ref(path2).on('child_added', snapshot => {
+      const msg = snapshot.val();
+      messagesDiv.innerHTML += `<b>${msg.username}:</b> ${msg.message}<br>`;
+      messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    });
+  }
+
+  // Refresh chat setiap kali kode berubah
+  document.getElementById('myCode').addEventListener('change', listenMessages);
+  document.getElementById('partnerCode').addEventListener('change', listenMessages);
+</script>
+</body>
+</html>
