@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>CS Chat Panel</title>
+</head>
+
+<body>
+
+<h2>CS Kirim Pesan</h2>
+
+<input id="csName" placeholder="Nama CS"><br><br>
+<input id="message" placeholder="Pesan"><br><br>
+
+<button onclick="sendMessage()">Kirim</button>
+
+<script type="module">
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getDatabase, ref, push } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCf46sEsbuZQ4ASwrbhteRqiEVOyQdJALU",
+  authDomain: "mchat-project-9e66a.firebaseapp.com",
+  databaseURL: "https://mchat-project-9e66a-default-rtdb.firebaseio.com",
+  projectId: "mchat-project-9e66a",
+  storageBucket: "mchat-project-9e66a.firebasestorage.app",
+  messagingSenderId: "783368240435",
+  appId: "1:783368240435:web:e3f735b73c946b7fcd9246"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+window.sendMessage = function(){
+
+let csName = document.getElementById("csName").value
+let message = document.getElementById("message").value
+
+push(ref(db,"chats/"+csName),{
+sender:"cs",
+text:message,
+time:Date.now()
+})
+
+document.getElementById("message").value=""
+
+}
+
+</script>
+
+</body>
+</html>
